@@ -12,7 +12,7 @@ app.get('',(req,res)=>{
     res.status(200).send('AiChatbot....');
 })
 
-app.get('/login', (req, res) => {
+app.get('/sendOtp', (req, res) => {
     const { email } = req.body;
     otpService.sendOTP(email)
       .then(response => res.status(200).send(response)) 
