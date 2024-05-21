@@ -20,15 +20,14 @@ function sendOTP(email) {
   
     return transporter.sendMail(mailOptions)
       .then(() => {
-        // console.log();
-             response = {
+
+        response = {
                 "OtpGenrated":true,
                 "Otp":otp
             }
         return response; 
       })
       .catch(error => {
-        // console.error('Error sending OTP:', error);
         return {
                 'OtpGenrated':false,
                 'Error sending OTP: ' : error.message ,
