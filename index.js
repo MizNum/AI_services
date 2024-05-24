@@ -7,26 +7,29 @@ const PORT = 3000;
 const otpService = require('./otpService')
 app.use(cors());
 app.use(bodyParser.json({ limit: '10mb' })); 
-const multer = require('multer');
 const fs = require('fs-extra');
 const path = require('path');
 const moment = require('moment');   
-const crypto = require('crypto')
-const speech = require('@google-cloud/speech');
-const client = new speech.SpeechClient();
 const axios = require('axios');
 const querystring = require('querystring');
 
 
 
-//translate function 
+app.get('', (req, res) => {
+  res.status(200).send('AiChatbot....');
 
-async function translate(langFrom, langTo, text) {
+});
+
+
+
+//translate function 
+async function translate(langFrom, langTo, text,key) {
   const url = process.env.GS_KEY_URL;
   const params = querystring.stringify({
       q: text,
       target: langTo,
-      source: langFrom
+      source: langFrom,
+      securityKey : key
   });
 
   try {
@@ -43,44 +46,18 @@ async function translate(langFrom, langTo, text) {
 }
 
 
-//translate function ends
 
 
+app.post('/translate', async (req, res) => {
+  const { text, sourceLang, targetLang } = req.body;
 
-
-
-
-
-
-
-
-
-
-
-
-app.get('', (req, res) => {
-    res.status(200).send('AiChatbot....');
+  try {
+    const translatedText = await translate(sourceLang, targetLang, text, process.env.GS_KEY);
+    res.status(201).send({ translatedText });
+  } catch (error) {
+    res.status(500).send({ error: 'Translation failed', details: error.message });
+  }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -95,26 +72,6 @@ app.post('/sendOtp', (req, res) => {
         .then(response => res.status(201).send(response))
         .catch(error => res.status(500).send(error));
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -163,105 +120,23 @@ app.post('/bot-response', async (req, res) => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const uploadPath = path.join(__dirname, 'uploads');
-fs.ensureDirSync(uploadPath);
-
-app.post('/upload', (req, res) => {
-  const base64String = req.body.file;
-  try {
-    const decodedBuffer = Buffer.from(base64String, 'base64');
-    const timestamp = moment().format('YYYYMMDD-HHmmss'); 
-    const uniqueId = crypto.randomBytes(8).toString('hex');
-    const fileName = `${timestamp}-${uniqueId}.wav`;
-    const filePath = path.join(uploadPath, fileName);
-
-    fs.writeFile(filePath, decodedBuffer, (err) => {
-      if (err) {
-        console.error('Error writing file:', err);
-        res.status(500).send('Error saving audio');
-        return;
-    }
-
-    
-
-    //   console.log('Audio data saved successfully:', filePath);
-
-      const audioUrl =`/uploads/${fileName}`; // Construct the URL
-
-      res.json({
-        message: 'Audio data uploaded successfully',
-        url: audioUrl
-      }); // Include the URL in the response
-    });
-
-  } catch (error) {
-    console.error('Error decoding Base64:', error);
-    res.status(400).send('Invalid Base64 data');
-  }
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-app.post('/translate',( async (req,res)=>{
-  const {text,sourceLang,targetLang,API_KEY_TRANSLATE} = req.body;
-
-
-  if(API_KEY_TRANSLATE!==process.env.API_KEY_TRANSLATE){
-    res.status(201).send("Key doesn't matches");
-  }
-  else{
-      try {
-          const translatedText = await translate(sourceLang, targetLang, text);
-          res.status(200).send({translatedText : translatedText});
-      } catch (error) {
-          res.status(500).send('ERROR :',error);
-          console.error('Translation failed:', error);
-      }
-  }
-
-}
-));
-
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-
+app.use('/Video', express.static(path.join(__dirname, 'Video')));
 
 
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
