@@ -12,7 +12,7 @@ const path = require('path');
 const moment = require('moment');   
 const axios = require('axios');
 const querystring = require('querystring');
-
+const { count } = require('console');
 
 
 app.get('', (req, res) => {
@@ -23,13 +23,12 @@ app.get('', (req, res) => {
 
 
 //translate function 
-async function translate(langFrom, langTo, text,key) {
+async function translate(text, langTo, langFrom) {
   const url = process.env.GS_KEY_URL;
   const params = querystring.stringify({
       q: text,
       target: langTo,
-      source: langFrom,
-      securityKey : key
+      source: langFrom
   });
 
   try {
@@ -49,14 +48,28 @@ async function translate(langFrom, langTo, text,key) {
 
 
 app.post('/translate', async (req, res) => {
-  const { text, sourceLang, targetLang } = req.body;
+  let {conversation, targetLang ,sourceLang} = req.body;
+  try { let count = 1;
+    for (let item of conversation) {
+      if (item.type === 'bot_response') {
+        if (item.result) {
+          item.result = await translate(item.result, targetLang,sourceLang);
+        }
+        if (item.source) {
+          item.source = await translate(item.source, targetLang,sourceLang);
+        }
+        if (item.Summary) {
+          item.Summary = await translate(item.Summary, targetLang,sourceLang);
+        }
+        // console.log('Translated ',count++,' : ',item.result,'\n',item.Summary,'\n',item.result,'\n');
+      }
+    }
+    res.status(201).send({ translatedConversation: conversation });
 
-  try {
-    const translatedText = await translate(sourceLang, targetLang, text, process.env.GS_KEY);
-    res.status(201).send({ translatedText });
   } catch (error) {
     res.status(500).send({ error: 'Translation failed', details: error.message });
   }
+
 });
 
 
@@ -84,15 +97,17 @@ app.post('/sendOtp', (req, res) => {
 
 
 app.post('/bot-response', async (req, res) => {
-    const { text } = req.body;
+    const { text ,lang} = req.body;
+
+    // this is suppose to be fetched form api calling the python api 
     try {
-        const response =       {
+        let response =       {
           "type": "bot_response",
           "sender": "bot",
           "timestamp": "2024-05-07 10:01:00 AM",
           "name": "bot",
-          "videoUrl": "../../assets/video/360p.mp4", 
-              "vflag":false,
+          "videoUrl": "LinearRegression.mp4", 
+          "vflag":false,
           "vtlag":false,
           "Summary": "Summary by Gpt",
           "startTime": "hh:mm:ss",
@@ -107,12 +122,27 @@ app.post('/bot-response', async (req, res) => {
             "video_name": "2023-10-04_KInt_default"
           },
           "source": "So that's what we want to have. So for logistic regression, there is a very concrete loss function that we always use. And this loss function is defined like this, and this is called the logistic loss. And so let's look at what this does. So our target class, Y, is either zero or it is one. If it's either zero or one, if it's zero, this means this part vanishes over here. If it's one, it means this part vanishes over here because this part, thing becomes zero. So it means either we have this part, or we have this part of the loss function. Depending on the value of Y. So if we say Y is equal to one, and this part over here vanishes, and it means we take, our loss function will be the logarithm of our prediction. So logarithm of our prediction. So what is if we get a large prediction? So how does the log of any function look like? So I haven't made a plot of this. Would have been nice if I had some internet connection right now. Hmm., So let's see if I can get. So, ah yeah, some plot of logarithm. So the"
-        }
-        res.status(201).send(response);
+        } 
+            if(lang!=='en'){
+                    if(response.result){
+                        response.result = await translate(response.result,lang,'');
+                    }
+                    if(response.Summary){
+                        response.Summary = await translate(response.Summary,lang,'');
+
+                    }
+                    if(response.source){
+                        response.source = await translate(response.source,lang,'');
+
+                    }
+             }
+        res.status(201).send({'response' : response});
     } catch (error) {
         console.log(error);
         res.status(500).send("Server Error");
     }
+
+
 });
 
 
