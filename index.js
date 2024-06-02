@@ -99,9 +99,9 @@ app.post('/sendOtp', (req, res) => {
 app.post('/bot-response', async (req, res) => {
     const { text ,lang} = req.body;
 
-    // this is suppose to be fetched form api calling the python api 
+    // this is suppose to be data from api
     try {
-        let response =       {
+        const  response =       {
           "type": "bot_response",
           "sender": "bot",
           "timestamp": "2024-05-07 10:01:00 AM",
@@ -123,6 +123,10 @@ app.post('/bot-response', async (req, res) => {
           },
           "source": "So that's what we want to have. So for logistic regression, there is a very concrete loss function that we always use. And this loss function is defined like this, and this is called the logistic loss. And so let's look at what this does. So our target class, Y, is either zero or it is one. If it's either zero or one, if it's zero, this means this part vanishes over here. If it's one, it means this part vanishes over here because this part, thing becomes zero. So it means either we have this part, or we have this part of the loss function. Depending on the value of Y. So if we say Y is equal to one, and this part over here vanishes, and it means we take, our loss function will be the logarithm of our prediction. So logarithm of our prediction. So what is if we get a large prediction? So how does the log of any function look like? So I haven't made a plot of this. Would have been nice if I had some internet connection right now. Hmm., So let's see if I can get. So, ah yeah, some plot of logarithm. So the"
         } 
+
+        // const response = axios.post('pota ddress',{text}).then().catch();  change this line accordingly.
+
+
             if(lang!=='en'){
                     if(response.result){
                         response.result = await translate(response.result,lang,'');
